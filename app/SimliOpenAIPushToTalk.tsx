@@ -387,7 +387,7 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
               </button>
               <button
                 onClick={handleStop}
-                className=" group w-[52px] h-[52px] flex items-center mt-4 bg-red-600 text-white justify-center rounded-[100px] backdrop-blur transition-all duration-300 hover:bg-white hover:text-black hover:rounded-sm"
+                className=" group w-[52px] h-[52px] flex items-center mt-4 bg-red text-white justify-center rounded-[100px] backdrop-blur transition-all duration-300 hover:bg-white hover:text-black hover:rounded-sm"
               >
                 <IconExit className="group-hover:invert-0 group-hover:brightness-0 transition-all duration-300" />
               </button>
