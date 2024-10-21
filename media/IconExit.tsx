@@ -17,9 +17,9 @@ const IconExit = ({ className }: Props) => {
       <path
         d="M5 5.5L15 15.5M15 5.5L5 15.5"
         stroke="white"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

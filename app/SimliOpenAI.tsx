@@ -6,7 +6,7 @@ import cn from "./utils/TailwindMergeAndClsx";
 import IconExit from "@/media/IconExit";
 import IconSparkleLoader from "@/media/IconSparkleLoader";
 
-interface OpenAISimliInteractionProps {
+interface SimliOpenAIProps {
   simli_faceid: string;
   initialPrompt: string;
   onStart: () => void;
@@ -15,7 +15,7 @@ interface OpenAISimliInteractionProps {
 
 const simliClient = new SimliClient();
 
-const OpenAISimliInteraction: React.FC<OpenAISimliInteractionProps> = ({
+const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
   simli_faceid,
   initialPrompt,
   onStart,
@@ -399,4 +399,4 @@ const OpenAISimliInteraction: React.FC<OpenAISimliInteractionProps> = ({
   );
 };
 
-export default OpenAISimliInteraction;
+export default SimliOpenAI;

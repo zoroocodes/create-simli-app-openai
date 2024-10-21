@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import OpenAISimliInteraction from './OpenAISimliInteraction';
+import SimliOpenAI from './SimliOpenAI';
 import DottedFace from './DottedFace';
 import SimliHeaderLogo from './Logo';
 import Navbar from './Navbar';
@@ -26,12 +26,12 @@ const Demo: React.FC = () => {
       <SimliHeaderLogo />
       <Navbar />
       <div className="absolute top-[32px] right-[32px]">
-        <text onClick={() => {window.open("https://github.com/simliai")}} className="font-bold cursor-pointer mb-8 text-xl leading-8"><Image className='w-[20px] inline mr-2' src={GitHubLogo} alt='' />create-simli-app (OpenAI)</text>
+        <text onClick={() => {window.open("https://github.com/simliai/create-simli-app-openai")}} className="font-bold cursor-pointer mb-8 text-xl leading-8"><Image className='w-[20px] inline mr-2' src={GitHubLogo} alt='' />create-simli-app (OpenAI)</text>
       </div>
       <div className="flex flex-col items-center gap-6 bg-effect15White p-6 pb-[40px] rounded-xl w-full">
         <div>
           {showDottedFace && <DottedFace />}
-          <OpenAISimliInteraction
+          <SimliOpenAI
             simli_faceid={avatar.simli_faceid}
             initialPrompt={avatar.initialPrompt}
             onStart={onStart}
