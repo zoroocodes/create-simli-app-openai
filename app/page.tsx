@@ -1,9 +1,9 @@
 'use client';
 import React, { useState } from 'react';
 import SimliOpenAI from './SimliOpenAI';
-import DottedFace from './DottedFace';
-import SimliHeaderLogo from './Logo';
-import Navbar from './Navbar';
+import DottedFace from './Components/DottedFace';
+import SimliHeaderLogo from './Components/Logo';
+import Navbar from './Components/Navbar';
 import Image from "next/image";
 import GitHubLogo from "@/media/github-mark-white.svg";
 
