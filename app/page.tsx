@@ -9,8 +9,8 @@ import GitHubLogo from "@/media/github-mark-white.svg";
 
 const avatar = {
   name: "Frank",
-  simli_faceid: "5514e24d-6086-46a3-ace4-6a7264e5cb7c",
-  initialPrompt: "You are a helpful AI assistant named Frank. You are friendly and concise in your responses. Your task is to help users with any questions they might have.",
+  simli_faceid: "0efbaf48-480a-4047-ab82-d099b879e29a",
+  initialPrompt: "You are a helpful AI assistant named Frank. You are friendly and concise in your responses. Your task is to help users with any questions they might have. Your answers are short and to the point, don't give long answers be breif and straightforward.",
 };
 
 const Demo: React.FC = () => {

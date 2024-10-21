@@ -6,7 +6,7 @@ import cn from "./utils/TailwindMergeAndClsx";
 import IconExit from "@/media/IconExit";
 import IconSparkleLoader from "@/media/IconSparkleLoader";
 
-interface SimliOpenAIProps {
+interface SimliOpenAIPushToTalkProps {
   simli_faceid: string;
   initialPrompt: string;
   onStart: () => void;
@@ -15,7 +15,7 @@ interface SimliOpenAIProps {
 
 const simliClient = new SimliClient();
 
-const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
+const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
   simli_faceid,
   initialPrompt,
   onStart,
@@ -28,7 +28,6 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [userMessage, setUserMessage] = useState("...");
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-  const [audioThreshold, setAudioThreshold] = useState(0.2); // Adjust this value as needed
 
   // Refs for various components and states
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -121,15 +120,6 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
   }, []);
 
   /**
-   * Handles interruptions in the conversation flow.
-   */
-  const interruptConversation = () => {
-    console.warn("User interrupted the conversation");
-    simliClient?.ClearBuffer();
-    openAIClientRef.current?.cancelResponse();
-  }
-
-  /**
    * Processes the next audio chunk in the queue.
    */
   const processNextAudioChunk = useCallback(() => {
@@ -210,31 +200,15 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
         1
       );
 
-      // Function to log audio levels
-      const logAudioLevel = (audioLevel: number) => {
-        if (audioLevel > audioThreshold) {
-          console.log(
-            `Audio level surpassed threshold: ${audioLevel.toFixed(4)}`
-          );
-          interruptConversation();
-        }
-      };
-
       processorRef.current.onaudioprocess = (e) => {
         const inputData = e.inputBuffer.getChannelData(0);
         const audioData = new Int16Array(inputData.length);
-        let sum = 0;
-
         for (let i = 0; i < inputData.length; i++) {
-          const sample = Math.max(-1, Math.min(1, inputData[i]));
-          audioData[i] = Math.floor(sample * 32767);
-          sum += Math.abs(sample);
+          audioData[i] = Math.max(
+            -32768,
+            Math.min(32767, Math.floor(inputData[i] * 32768))
+          );
         }
-
-        // Calculate RMS (Root Mean Square) for audio level
-        const rms = Math.sqrt(sum / inputData.length);
-        logAudioLevel(rms);
-
         openAIClientRef.current?.appendInputAudio(audioData);
       };
 
@@ -246,7 +220,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
       console.error("Error accessing microphone:", err);
       setError("Error accessing microphone. Please check your permissions.");
     }
-  }, [audioThreshold]);
+  }, []);
 
   /**
    * Stops audio recording from the user's microphone
@@ -275,7 +249,6 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
     try {
       await simliClient?.start();
       await initializeOpenAIClient();
-      startRecording();
       setIsAvatarVisible(true);
     } catch (error: any) {
       console.error("Error starting interaction:", error);
@@ -292,7 +265,6 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
     console.log("Stopping interaction...");
     setIsLoading(false);
     setError("");
-    stopRecording();
     setIsAvatarVisible(false);
     simliClient?.close();
     openAIClientRef.current?.disconnect();
@@ -302,6 +274,48 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
     stopRecording();
     console.log("Interaction stopped");
   }, [stopRecording]);
+
+  // Push-to-talk button handlers
+  const handlePushToTalkStart = useCallback(() => {
+    if (!isButtonDisabled) {
+      startRecording();
+    }
+  }, [startRecording, isButtonDisabled]);
+
+  const handlePushToTalkEnd = useCallback(() => {
+    stopRecording();
+    setIsButtonDisabled(true);
+    setTimeout(() => {
+      setIsButtonDisabled(false);
+    }, 300); // 300ms delay before allowing the button to be pressed again
+  }, [stopRecording]);
+
+  // Visualize mic audio
+  const AudioVisualizer = () => {
+    const [volume, setVolume] = useState(0);
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setVolume(Math.random() * 100);
+      }, 100);
+
+      return () => clearInterval(interval);
+    }, []);
+
+    return (
+      <div className="flex items-end justify-center space-x-1 h-5">
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={i}
+            className="w-2 bg-black transition-all duration-300 ease-in-out"
+            style={{
+              height: `${Math.min(100, volume + Math.random() * 20)}%`,
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
 
   // Effect to initialize Simli client and clean up resources on unmount
   useEffect(() => {
@@ -356,14 +370,26 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
           <>
             <div className="flex items-center gap-4 w-full">
               <button
-                onClick={handleStop}
+                onMouseDown={handlePushToTalkStart}
+                onTouchStart={handlePushToTalkStart}
+                onMouseUp={handlePushToTalkEnd}
+                onTouchEnd={handlePushToTalkEnd}
+                onMouseLeave={handlePushToTalkEnd}
+                disabled={isButtonDisabled}
                 className={cn(
-                  "mt-4 group text-white flex-grow bg-red hover:rounded-sm hover:bg-white h-[52px] px-6 rounded-[100px] transition-all duration-300"
+                  "mt-4 text-white flex-grow bg-simliblue hover:rounded-sm hover:bg-opacity-70 h-[52px] px-6 rounded-[100px] transition-all duration-300",
+                  isRecording && "bg-[#1B1B1B] rounded-sm hover:bg-opacity-100"
                 )}
               >
-                <span className="font-abc-repro-mono group-hover:text-black font-bold w-[164px] transition-all duration-300">
-                  Stop Interaction
+                <span className="font-abc-repro-mono font-bold w-[164px]">
+                  {isRecording ? "Release to Stop" : "Push & hold to talk"}
                 </span>
+              </button>
+              <button
+                onClick={handleStop}
+                className=" group w-[52px] h-[52px] flex items-center mt-4 bg-red-600 text-white justify-center rounded-[100px] backdrop-blur transition-all duration-300 hover:bg-white hover:text-black hover:rounded-sm"
+              >
+                <IconExit className="group-hover:invert-0 group-hover:brightness-0 transition-all duration-300" />
               </button>
             </div>
           </>
@@ -373,4 +399,4 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
   );
 };
 
-export default SimliOpenAI;
+export default SimliOpenAIPushToTalk;
