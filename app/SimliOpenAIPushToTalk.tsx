@@ -8,6 +8,7 @@ import IconSparkleLoader from "@/media/IconSparkleLoader";
 
 interface SimliOpenAIPushToTalkProps {
   simli_faceid: string;
+  openai_voice: "echo" | "alloy" | "shimmer";
   initialPrompt: string;
   onStart: () => void;
   showDottedFace: boolean;
@@ -17,6 +18,7 @@ const simliClient = new SimliClient();
 
 const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
   simli_faceid,
+  openai_voice,
   initialPrompt,
   onStart,
   showDottedFace,
@@ -72,7 +74,7 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
 
       await openAIClientRef.current.updateSession({
         instructions: initialPrompt,
-        voice: "echo",
+        voice: openai_voice,
         turn_detection: { type: "server_vad" },
         input_audio_transcription: { model: "whisper-1" },
       });
@@ -249,11 +251,11 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
     try {
       await simliClient?.start();
       await initializeOpenAIClient();
-      setIsAvatarVisible(true);
     } catch (error: any) {
       console.error("Error starting interaction:", error);
       setError(`Error starting interaction: ${error.message}`);
     } finally {
+      setIsAvatarVisible(true);
       setIsLoading(false);
     }
   }, [initializeOpenAIClient, onStart]);
@@ -279,15 +281,17 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
   const handlePushToTalkStart = useCallback(() => {
     if (!isButtonDisabled) {
       startRecording();
+
+      // Clear Simli buffer and cancel OpenAI response
+      simliClient?.ClearBuffer();
+      openAIClientRef.current?.cancelResponse();
     }
   }, [startRecording, isButtonDisabled]);
 
   const handlePushToTalkEnd = useCallback(() => {
-    stopRecording();
-    setIsButtonDisabled(true);
     setTimeout(() => {
-      setIsButtonDisabled(false);
-    }, 300); // 300ms delay before allowing the button to be pressed again
+      stopRecording();
+    }, 500);
   }, [stopRecording]);
 
   // Visualize mic audio

@@ -8,6 +8,7 @@ import IconSparkleLoader from "@/media/IconSparkleLoader";
 
 interface SimliOpenAIProps {
   simli_faceid: string;
+  openai_voice: "echo" | "alloy" | "shimmer";
   initialPrompt: string;
   onStart: () => void;
   showDottedFace: boolean;
@@ -17,6 +18,7 @@ const simliClient = new SimliClient();
 
 const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
   simli_faceid,
+  openai_voice,
   initialPrompt,
   onStart,
   showDottedFace,
@@ -73,7 +75,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
 
       await openAIClientRef.current.updateSession({
         instructions: initialPrompt,
-        voice: "echo",
+        voice: openai_voice,
         turn_detection: { type: "server_vad" },
         input_audio_transcription: { model: "whisper-1" },
       });
@@ -276,11 +278,11 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
       await simliClient?.start();
       await initializeOpenAIClient();
       startRecording();
-      setIsAvatarVisible(true);
     } catch (error: any) {
       console.error("Error starting interaction:", error);
       setError(`Error starting interaction: ${error.message}`);
     } finally {
+      setIsAvatarVisible(true);
       setIsLoading(false);
     }
   }, [initializeOpenAIClient, onStart]);

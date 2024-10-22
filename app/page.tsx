@@ -8,8 +8,17 @@ import Navbar from "./Components/Navbar";
 import Image from "next/image";
 import GitHubLogo from "@/media/github-mark-white.svg";
 
-const avatar = {
+interface avatarSettings {
+  name: string;
+  openai_voice: "echo" | "alloy" | "shimmer";
+  simli_faceid: string;
+  initialPrompt: string;
+}
+
+// Customize your avatar here
+const avatar: avatarSettings = {
   name: "Frank",
+  openai_voice: "echo",
   simli_faceid: "5514e24d-6086-46a3-ace4-6a7264e5cb7c",
   initialPrompt:
     "You are a helpful AI assistant named Frank. You are friendly and concise in your responses. Your task is to help users with any questions they might have. Your answers are short and to the point, don't give long answers be brief and straightforward.",
@@ -19,7 +28,7 @@ const Demo: React.FC = () => {
   const [showDottedFace, setShowDottedFace] = useState(true);
   const [interactionMode, setInteractionMode] = useState<
     "regular" | "pushToTalk"
-  >("regular");
+  >("pushToTalk");
 
   const onStart = () => {
     console.log("Setting setshowDottedface to false...");
@@ -33,19 +42,19 @@ const Demo: React.FC = () => {
         <div className="absolute bottom-[32px] right-[32px] flex gap-2">
           <button
             onClick={() => setInteractionMode("regular")}
-            className={`px-4 py-2 rounded-[100px] ${
-              interactionMode === "regular" ? "bg-simliblue" : "bg-gray-500"
+            className={`px-4 py-2 rounded-[100px] font-abc-repro-mono focus:bg-simliblue focus:text-white focus:rounded-[100px] hover:rounded-sm hover:bg-white hover:text-black transition-all duration-300 ${
+              interactionMode === "regular" ? "bg-simliblue" : "bg-white bg-opacity-20"
             }`}
           >
-            Regular
+            <b>Regular</b>
           </button>
           <button
             onClick={() => setInteractionMode("pushToTalk")}
-            className={`px-4 py-2 rounded-[100px] ${
-              interactionMode === "pushToTalk" ? "bg-simliblue" : "bg-gray-500"
+            className={`px-4 py-2 rounded-[100px] font-abc-repro-mono focus:bg-simliblue focus:text-white focus:rounded-[100px] hover:rounded-sm hover:bg-white hover:text-black transition-all duration-300 ${
+              interactionMode === "pushToTalk" ? "bg-simliblue" : "bg-white bg-opacity-20"
             }`}
           >
-            Push to Talk
+            <b>Push to Talk</b>
           </button>
         </div>
       )}
@@ -66,6 +75,7 @@ const Demo: React.FC = () => {
           {showDottedFace && <DottedFace />}
           {interactionMode === "regular" ? (
             <SimliOpenAI
+              openai_voice={avatar.openai_voice}
               simli_faceid={avatar.simli_faceid}
               initialPrompt={avatar.initialPrompt}
               onStart={onStart}
@@ -73,6 +83,7 @@ const Demo: React.FC = () => {
             />
           ) : (
             <SimliOpenAIPushToTalk
+              openai_voice={avatar.openai_voice}
               simli_faceid={avatar.simli_faceid}
               initialPrompt={avatar.initialPrompt}
               onStart={onStart}
