@@ -30,7 +30,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [userMessage, setUserMessage] = useState("...");
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-  const [audioThreshold, setAudioThreshold] = useState(0.2); // Adjust this value as needed
+  const [audioThreshold, setAudioThreshold] = useState(0.35); // Adjust this value as needed
 
   // Refs for various components and states
   const videoRef = useRef<HTMLVideoElement>(null);
