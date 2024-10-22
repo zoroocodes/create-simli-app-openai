@@ -8,7 +8,7 @@ export default function Navbar() {
               onClick={() => {
                 window.open("https://docs.simli.com/introduction");
               }}
-              className="block py-2 px-3 text-gray-900 rounded   md:border-0 md:p-0 dark:text-white hover:underline    "
+              className="block cursor-pointer py-2 px-3 text-gray-900 rounded   md:border-0 md:p-0 dark:text-white hover:underline    "
             >
               Documentation
             </a>
@@ -18,7 +18,7 @@ export default function Navbar() {
               onClick={() => {
                 window.open("https://simli.com");
               }}
-              className="block py-2 px-3 text-gray-900 rounded   md:border-0  md:p-0 dark:text-white hover:underline    "
+              className="block cursor-pointer py-2 px-3 text-gray-900 rounded   md:border-0  md:p-0 dark:text-white hover:underline    "
             >
               Billing
             </a>
@@ -28,7 +28,7 @@ export default function Navbar() {
               onClick={() => {
                 window.open("https://discord.gg/yQx49zNF4d");
               }}
-              className="block py-2 px-3 text-gray-900 rounded   md:border-0  md:p-0 dark:text-white hover:underline    "
+              className="block cursor-pointer py-2 px-3 text-gray-900 rounded   md:border-0  md:p-0 dark:text-white hover:underline    "
             >
               Discord
             </a>
