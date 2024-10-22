@@ -32,8 +32,6 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
   const [error, setError] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [userMessage, setUserMessage] = useState("...");
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-  const [audioThreshold, setAudioThreshold] = useState(0.35); // Adjust this value as needed
 
   // Refs for various components and states
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -88,6 +86,11 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
         "conversation.updated",
         handleConversationUpdate
       );
+
+      openAIClientRef.current.on('conversation.interrupted', () => {
+        interruptConversation();
+      });
+
       openAIClientRef.current.on(
         "input_audio_buffer.speech_stopped",
         handleSpeechStopped
@@ -215,16 +218,6 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
         1
       );
 
-      // Function to log audio levels
-      const logAudioLevel = (audioLevel: number) => {
-        if (audioLevel > audioThreshold) {
-          console.log(
-            `Audio level surpassed threshold: ${audioLevel.toFixed(4)}`
-          );
-          interruptConversation();
-        }
-      };
-
       processorRef.current.onaudioprocess = (e) => {
         const inputData = e.inputBuffer.getChannelData(0);
         const audioData = new Int16Array(inputData.length);
@@ -235,10 +228,6 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
           audioData[i] = Math.floor(sample * 32767);
           sum += Math.abs(sample);
         }
-
-        // Calculate RMS (Root Mean Square) for audio level
-        const rms = Math.sqrt(sum / inputData.length);
-        logAudioLevel(rms);
 
         openAIClientRef.current?.appendInputAudio(audioData);
       };
@@ -251,7 +240,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
       console.error("Error accessing microphone:", err);
       setError("Error accessing microphone. Please check your permissions.");
     }
-  }, [audioThreshold]);
+  }, []);
 
   /**
    * Stops audio recording from the user's microphone
