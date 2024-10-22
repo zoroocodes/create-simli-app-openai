@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import SimliOpenAI from "./SimliOpenAI";
 import SimliOpenAIPushToTalk from "./SimliOpenAIPushToTalk";
 import DottedFace from "./Components/DottedFace";
@@ -27,12 +27,29 @@ const avatar: avatarSettings = {
 const Demo: React.FC = () => {
   const [showDottedFace, setShowDottedFace] = useState(true);
   const [interactionMode, setInteractionMode] = useState<
-    "regular" | "pushToTalk"
-  >("pushToTalk");
+    "regular" | "pushToTalk" | undefined
+  >("regular");
+
+  useEffect(() => {
+    const storedInteractionMode = localStorage.getItem("interactionMode");
+    if (storedInteractionMode) {
+      setInteractionMode(storedInteractionMode as "regular" | "pushToTalk");
+    }
+  }, []);
+
+  const saveInteractionMode = (mode: "regular" | "pushToTalk") => {
+    localStorage.setItem("interactionMode", mode);
+    setInteractionMode(mode);
+  }
 
   const onStart = () => {
     console.log("Setting setshowDottedface to false...");
     setShowDottedFace(false);
+  };
+
+  const onClose = () => {
+    console.log("Setting setshowDottedface to true...");
+    setShowDottedFace(true);
   };
 
   return (
@@ -41,17 +58,21 @@ const Demo: React.FC = () => {
       {showDottedFace && (
         <div className="absolute bottom-[32px] right-[32px] flex gap-2">
           <button
-            onClick={() => setInteractionMode("regular")}
+            onClick={() => saveInteractionMode("regular")}
             className={`px-4 py-2 rounded-[100px] font-abc-repro-mono focus:bg-simliblue focus:text-white focus:rounded-[100px] hover:rounded-sm hover:bg-white hover:text-black transition-all duration-300 ${
-              interactionMode === "regular" ? "bg-simliblue" : "bg-white bg-opacity-20"
+              interactionMode === "regular"
+                ? "bg-simliblue"
+                : "bg-white bg-opacity-20"
             }`}
           >
             <b>Regular</b>
           </button>
           <button
-            onClick={() => setInteractionMode("pushToTalk")}
+            onClick={() => saveInteractionMode("pushToTalk")}
             className={`px-4 py-2 rounded-[100px] font-abc-repro-mono focus:bg-simliblue focus:text-white focus:rounded-[100px] hover:rounded-sm hover:bg-white hover:text-black transition-all duration-300 ${
-              interactionMode === "pushToTalk" ? "bg-simliblue" : "bg-white bg-opacity-20"
+              interactionMode === "pushToTalk"
+                ? "bg-simliblue"
+                : "bg-white bg-opacity-20"
             }`}
           >
             <b>Push to Talk</b>
@@ -79,6 +100,7 @@ const Demo: React.FC = () => {
               simli_faceid={avatar.simli_faceid}
               initialPrompt={avatar.initialPrompt}
               onStart={onStart}
+              onClose={onClose}
               showDottedFace={showDottedFace}
             />
           ) : (
@@ -87,6 +109,7 @@ const Demo: React.FC = () => {
               simli_faceid={avatar.simli_faceid}
               initialPrompt={avatar.initialPrompt}
               onStart={onStart}
+              onClose={onClose}
               showDottedFace={showDottedFace}
             />
           )}

@@ -11,6 +11,7 @@ interface SimliOpenAIPushToTalkProps {
   openai_voice: "echo" | "alloy" | "shimmer";
   initialPrompt: string;
   onStart: () => void;
+  onClose: () => void;
   showDottedFace: boolean;
 }
 
@@ -21,6 +22,7 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
   openai_voice,
   initialPrompt,
   onStart,
+  onClose,
   showDottedFace,
 }) => {
   // State management
@@ -274,6 +276,7 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
       audioContextRef.current.close();
     }
     stopRecording();
+    onClose();
     console.log("Interaction stopped");
   }, [stopRecording]);
 
@@ -284,7 +287,7 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
 
       // Clear Simli buffer and cancel OpenAI response
       simliClient?.ClearBuffer();
-      openAIClientRef.current?.cancelResponse();
+      openAIClientRef.current?.cancelResponse("");
     }
   }, [startRecording, isButtonDisabled]);
 
@@ -335,11 +338,13 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
     }
 
     return () => {
-      simliClient?.close();
-      openAIClientRef.current?.disconnect();
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
+      try {
+        simliClient?.close();
+        openAIClientRef.current?.disconnect();
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+        }
+      } catch {}
     };
   }, [initializeSimliClient]);
 

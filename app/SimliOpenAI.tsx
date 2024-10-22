@@ -5,12 +5,14 @@ import VideoBox from "./Components/VideoBox";
 import cn from "./utils/TailwindMergeAndClsx";
 import IconExit from "@/media/IconExit";
 import IconSparkleLoader from "@/media/IconSparkleLoader";
+import { on } from "events";
 
 interface SimliOpenAIProps {
   simli_faceid: string;
   openai_voice: "echo" | "alloy" | "shimmer";
   initialPrompt: string;
   onStart: () => void;
+  onClose: () => void;
   showDottedFace: boolean;
 }
 
@@ -21,6 +23,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
   openai_voice,
   initialPrompt,
   onStart,
+  onClose,
   showDottedFace,
 }) => {
   // State management
@@ -128,8 +131,8 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
   const interruptConversation = () => {
     console.warn("User interrupted the conversation");
     simliClient?.ClearBuffer();
-    openAIClientRef.current?.cancelResponse();
-  }
+    openAIClientRef.current?.cancelResponse("");
+  };
 
   /**
    * Processes the next audio chunk in the queue.
@@ -302,6 +305,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
       audioContextRef.current.close();
     }
     stopRecording();
+    onClose();
     console.log("Interaction stopped");
   }, [stopRecording]);
 
@@ -319,11 +323,13 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
     }
 
     return () => {
-      simliClient?.close();
-      openAIClientRef.current?.disconnect();
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
+      try {
+        simliClient?.close();
+        openAIClientRef.current?.disconnect();
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+        }
+      } catch {}
     };
   }, [initializeSimliClient]);
 

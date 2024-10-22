@@ -130,3 +130,4 @@ dist
 
 *.DS_Store
 .env
+.vercel
