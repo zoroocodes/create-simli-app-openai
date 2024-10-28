@@ -54,6 +54,8 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
         apiKey: process.env.NEXT_PUBLIC_SIMLI_API_KEY,
         faceID: simli_faceid,
         handleSilence: true,
+        maxSessionLength: 3600, // in seconds
+        maxIdleTime: 600, // in seconds
         videoRef: videoRef,
         audioRef: audioRef,
       };
@@ -334,6 +336,10 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
         const audioData = new Uint8Array(6000).fill(0);
         simliClient?.sendAudioData(audioData);
         console.log("Sent initial audio data");
+      });
+
+      simliClient?.on("disconnected", () => {
+        console.log("SimliClient disconnected");
       });
     }
 

@@ -54,6 +54,8 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
         apiKey: process.env.NEXT_PUBLIC_SIMLI_API_KEY,
         faceID: simli_faceid,
         handleSilence: true,
+        maxSessionLength: 60, // in seconds
+        maxIdleTime: 60, // in seconds
         videoRef: videoRef,
         audioRef: audioRef,
       };
@@ -87,7 +89,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
         handleConversationUpdate
       );
 
-      openAIClientRef.current.on('conversation.interrupted', () => {
+      openAIClientRef.current.on("conversation.interrupted", () => {
         interruptConversation();
       });
 
@@ -269,7 +271,6 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
     try {
       await simliClient?.start();
       await initializeOpenAIClient();
-      startRecording();
     } catch (error: any) {
       console.error("Error starting interaction:", error);
       setError(`Error starting interaction: ${error.message}`);
@@ -308,6 +309,11 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
         const audioData = new Uint8Array(6000).fill(0);
         simliClient?.sendAudioData(audioData);
         console.log("Sent initial audio data");
+        startRecording();
+      });
+
+      simliClient?.on("disconnected", () => {
+        console.log("SimliClient disconnected");
       });
     }
 
