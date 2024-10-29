@@ -285,6 +285,7 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
   // Push-to-talk button handlers
   const handlePushToTalkStart = useCallback(() => {
     if (!isButtonDisabled) {
+      setIsButtonDisabled(true);
       startRecording();
 
       // Clear Simli buffer and cancel OpenAI response
@@ -296,6 +297,7 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
   const handlePushToTalkEnd = useCallback(() => {
     setTimeout(() => {
       stopRecording();
+      setIsButtonDisabled(false);
     }, 500);
   }, [stopRecording]);
 
@@ -390,7 +392,6 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
                 onMouseUp={handlePushToTalkEnd}
                 onTouchEnd={handlePushToTalkEnd}
                 onMouseLeave={handlePushToTalkEnd}
-                disabled={isButtonDisabled}
                 className={cn(
                   "mt-4 text-white flex-grow bg-simliblue hover:rounded-sm hover:bg-opacity-70 h-[52px] px-6 rounded-[100px] transition-all duration-300",
                   isRecording && "bg-[#1B1B1B] rounded-sm hover:bg-opacity-100"
