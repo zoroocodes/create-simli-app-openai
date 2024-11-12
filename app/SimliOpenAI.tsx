@@ -40,6 +40,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const isSecondRun = useRef(false);
 
   // New refs for managing audio chunk delay
   const audioChunkQueueRef = useRef<Int16Array[]>([]);
@@ -89,9 +90,10 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
         handleConversationUpdate
       );
 
-      openAIClientRef.current.on("conversation.interrupted", () => {
-        interruptConversation();
-      });
+      openAIClientRef.current.on(
+        "conversation.interrupted",
+        interruptConversation
+      );
 
       openAIClientRef.current.on(
         "input_audio_buffer.speech_stopped",
@@ -99,8 +101,10 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
       );
       // openAIClientRef.current.on('response.canceled', handleResponseCanceled);
 
-      await openAIClientRef.current.connect();
-      console.log("OpenAI Client connected successfully");
+      await openAIClientRef.current.connect().then(() => {
+        console.log("OpenAI Client connected successfully");
+        startRecording();
+      });
 
       setIsAvatarVisible(true);
     } catch (error: any) {
@@ -269,8 +273,9 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
     onStart();
 
     try {
+      console.log("Starting...");
+      initializeSimliClient();
       await simliClient?.start();
-      await initializeOpenAIClient();
     } catch (error: any) {
       console.error("Error starting interaction:", error);
       setError(`Error starting interaction: ${error.message}`);
@@ -278,7 +283,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
       setIsAvatarVisible(true);
       setIsLoading(false);
     }
-  }, [initializeOpenAIClient, onStart]);
+  }, [onStart]);
 
   /**
    * Handles stopping the interaction, cleaning up resources and resetting states.
@@ -301,31 +306,32 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
 
   // Effect to initialize Simli client and clean up resources on unmount
   useEffect(() => {
-    initializeSimliClient();
+    if (isSecondRun.current) {
+      if (simliClient) {
+        simliClient?.on("connected", () => {
+          console.log("SimliClient connected");
+          const audioData = new Uint8Array(6000).fill(0);
+          simliClient?.sendAudioData(audioData);
+          console.log("Sent initial audio data");
+          initializeOpenAIClient();
+        });
 
-    if (simliClient) {
-      simliClient?.on("connected", () => {
-        console.log("SimliClient connected");
-        const audioData = new Uint8Array(6000).fill(0);
-        simliClient?.sendAudioData(audioData);
-        console.log("Sent initial audio data");
-        startRecording();
-      });
+        simliClient?.on("disconnected", () => {
+          console.log("SimliClient disconnected");
+        });
+      }
 
-      simliClient?.on("disconnected", () => {
-        console.log("SimliClient disconnected");
-      });
+      return () => {
+        try {
+          simliClient?.close();
+          openAIClientRef.current?.disconnect();
+          if (audioContextRef.current) {
+            audioContextRef.current.close();
+          }
+        } catch {}
+      };
     }
-
-    return () => {
-      try {
-        simliClient?.close();
-        openAIClientRef.current?.disconnect();
-        if (audioContextRef.current) {
-          audioContextRef.current.close();
-        }
-      } catch {}
-    };
+    isSecondRun.current = true;
   }, [initializeSimliClient]);
 
   return (
