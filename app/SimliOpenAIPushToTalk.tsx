@@ -277,7 +277,8 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
     simliClient?.close();
     openAIClientRef.current?.disconnect();
     if (audioContextRef.current) {
-      audioContextRef.current.close();
+      audioContextRef.current?.close();
+      audioContextRef.current = null;
     }
     stopRecording();
     onClose();
@@ -352,7 +353,7 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
           simliClient?.close();
           openAIClientRef.current?.disconnect();
           if (audioContextRef.current) {
-            audioContextRef.current.close();
+            audioContextRef.current?.close();
           }
         } catch {}
       };
