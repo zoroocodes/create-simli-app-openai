@@ -40,7 +40,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const isSecondRun = useRef(false);
+  const isFirstRun = useRef(true);
 
   // New refs for managing audio chunk delay
   const audioChunkQueueRef = useRef<Int16Array[]>([]);
@@ -382,7 +382,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
 
   // Effect to initialize Simli client and clean up resources on unmount
   useEffect(() => {
-    if (isSecondRun.current) {
+    if (isFirstRun.current) {
       if (simliClient) {
         simliClient?.on("connected", () => {
           console.log("SimliClient connected");
@@ -407,7 +407,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
         } catch {}
       };
     }
-    isSecondRun.current = true;
+    isFirstRun.current = false;
   }, [initializeSimliClient]);
 
   return (
