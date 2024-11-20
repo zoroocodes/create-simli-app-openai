@@ -102,6 +102,9 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
     } catch (error: any) {
       console.error("Error initializing OpenAI client:", error);
       setError(`Failed to initialize OpenAI client: ${error.message}`);
+    } finally {
+      setIsAvatarVisible(true);
+      setIsLoading(false);
     }
   }, [initialPrompt]);
 
@@ -161,8 +164,62 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
     console.log("Speech stopped event received", event);
   }, []);
 
+
   /**
-   * Downsamples audio data from one sample rate to another.
+   * Applies a simple low-pass filter to prevent aliasing of audio
+   */
+  const applyLowPassFilter = (
+    data: Int16Array,
+    cutoffFreq: number,
+    sampleRate: number
+  ): Int16Array => {
+    // Simple FIR filter coefficients
+    const numberOfTaps = 31; // Should be odd
+    const coefficients = new Float32Array(numberOfTaps);
+    const fc = cutoffFreq / sampleRate;
+    const middle = (numberOfTaps - 1) / 2;
+
+    // Generate windowed sinc filter
+    for (let i = 0; i < numberOfTaps; i++) {
+      if (i === middle) {
+        coefficients[i] = 2 * Math.PI * fc;
+      } else {
+        const x = 2 * Math.PI * fc * (i - middle);
+        coefficients[i] = Math.sin(x) / (i - middle);
+      }
+      // Apply Hamming window
+      coefficients[i] *=
+        0.54 - 0.46 * Math.cos((2 * Math.PI * i) / (numberOfTaps - 1));
+    }
+
+    // Normalize coefficients
+    const sum = coefficients.reduce((acc, val) => acc + val, 0);
+    coefficients.forEach((_, i) => (coefficients[i] /= sum));
+
+    // Apply filter
+    const result = new Int16Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+      let sum = 0;
+      for (let j = 0; j < numberOfTaps; j++) {
+        const idx = i - j + middle;
+        if (idx >= 0 && idx < data.length) {
+          sum += coefficients[j] * data[idx];
+        }
+      }
+      result[i] = Math.round(sum);
+    }
+
+    return result;
+  };
+
+  /**
+   * Downsamples audio data from one sample rate to another using linear interpolation
+   * and anti-aliasing filter.
+   *
+   * @param audioData - Input audio data as Int16Array
+   * @param inputSampleRate - Original sampling rate in Hz
+   * @param outputSampleRate - Target sampling rate in Hz
+   * @returns Downsampled audio data as Int16Array
    */
   const downsampleAudio = (
     audioData: Int16Array,
@@ -173,13 +230,35 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
       return audioData;
     }
 
+    if (inputSampleRate < outputSampleRate) {
+      throw new Error("Upsampling is not supported");
+    }
+
+    // Apply low-pass filter to prevent aliasing
+    // Cut off at slightly less than the Nyquist frequency of the target sample rate
+    const filteredData = applyLowPassFilter(
+      audioData,
+      outputSampleRate * 0.45, // Slight margin below Nyquist frequency
+      inputSampleRate
+    );
+
     const ratio = inputSampleRate / outputSampleRate;
-    const newLength = Math.round(audioData.length / ratio);
+    const newLength = Math.floor(audioData.length / ratio);
     const result = new Int16Array(newLength);
 
+    // Linear interpolation
     for (let i = 0; i < newLength; i++) {
-      const index = Math.round(i * ratio);
-      result[i] = audioData[index];
+      const position = i * ratio;
+      const index = Math.floor(position);
+      const fraction = position - index;
+
+      if (index + 1 < filteredData.length) {
+        const a = filteredData[index];
+        const b = filteredData[index + 1];
+        result[i] = Math.round(a + fraction * (b - a));
+      } else {
+        result[i] = filteredData[index];
+      }
     }
 
     return result;
@@ -257,12 +336,12 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
       console.log("Starting...");
       initializeSimliClient();
       await simliClient?.start();
+      eventListenerSimli();
     } catch (error: any) {
       console.error("Error starting interaction:", error);
       setError(`Error starting interaction: ${error.message}`);
     } finally {
-      setIsAvatarVisible(true);
-      setIsLoading(false);
+
     }
   }, [initializeOpenAIClient, onStart]);
 
@@ -331,35 +410,29 @@ const SimliOpenAIPushToTalk: React.FC<SimliOpenAIPushToTalkProps> = ({
     );
   };
 
-  // Effect to initialize Simli client and clean up resources on unmount
-  useEffect(() => {
-    if (isFirstRun.current) {
-      if (simliClient) {
-        simliClient?.on("connected", () => {
-          console.log("SimliClient connected");
-          const audioData = new Uint8Array(6000).fill(0);
-          simliClient?.sendAudioData(audioData);
-          console.log("Sent initial audio data");
-          initializeOpenAIClient();
-        });
+  /**
+   * Simli Event listeners
+   */
+  const eventListenerSimli = useCallback(() => {
+    if (simliClient) {
+      simliClient?.on("connected", () => {
+        console.log("SimliClient connected");
+        const audioData = new Uint8Array(6000).fill(0);
+        simliClient?.sendAudioData(audioData);
+        console.log("Sent initial audio data");
+        // Initialize OpenAI client
+        initializeOpenAIClient();
+      });
 
-        simliClient?.on("disconnected", () => {
-          console.log("SimliClient disconnected");
-        });
-      }
-
-      return () => {
-        try {
-          simliClient?.close();
-          openAIClientRef.current?.disconnect();
-          if (audioContextRef.current) {
-            audioContextRef.current?.close();
-          }
-        } catch {}
-      };
+      simliClient?.on("disconnected", () => {
+        console.log("SimliClient disconnected");
+        openAIClientRef.current?.disconnect();
+        if (audioContextRef.current) {
+          audioContextRef.current?.close();
+        }
+      });
     }
-    isFirstRun.current = false;
-  }, [initializeSimliClient]);
+  }, []);
 
   return (
     <>

@@ -351,6 +351,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
       console.log("Starting...");
       initializeSimliClient();
       await simliClient?.start();
+      eventListenerSimli();
     } catch (error: any) {
       console.error("Error starting interaction:", error);
       setError(`Error starting interaction: ${error.message}`);
@@ -380,35 +381,29 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
     console.log("Interaction stopped");
   }, [stopRecording]);
 
-  // Effect to initialize Simli client and clean up resources on unmount
-  useEffect(() => {
-    if (isFirstRun.current) {
-      if (simliClient) {
-        simliClient?.on("connected", () => {
-          console.log("SimliClient connected");
-          const audioData = new Uint8Array(6000).fill(0);
-          simliClient?.sendAudioData(audioData);
-          console.log("Sent initial audio data");
-          initializeOpenAIClient();
-        });
+  /**
+   * Simli Event listeners
+   */
+  const eventListenerSimli = useCallback(() => {
+    if (simliClient) {
+      simliClient?.on("connected", () => {
+        console.log("SimliClient connected");
+        const audioData = new Uint8Array(6000).fill(0);
+        simliClient?.sendAudioData(audioData);
+        console.log("Sent initial audio data");
+        // Initialize OpenAI client
+        initializeOpenAIClient();
+      });
 
-        simliClient?.on("disconnected", () => {
-          console.log("SimliClient disconnected");
-        });
-      }
-
-      return () => {
-        try {
-          simliClient?.close();
-          openAIClientRef.current?.disconnect();
-          if (audioContextRef.current) {
-            audioContextRef.current?.close();
-          }
-        } catch {}
-      };
+      simliClient?.on("disconnected", () => {
+        console.log("SimliClient disconnected");
+        openAIClientRef.current?.disconnect();
+        if (audioContextRef.current) {
+          audioContextRef.current?.close();
+        }
+      });
     }
-    isFirstRun.current = false;
-  }, [initializeSimliClient]);
+  }, []);
 
   return (
     <>
