@@ -65,7 +65,7 @@ const Demo: React.FC = () => {
                 : "bg-white bg-opacity-20"
             }`}
           >
-            <b>Regular</b>
+            <b>Realtime</b>
           </button>
           <button
             onClick={() => saveInteractionMode("pushToTalk")}
