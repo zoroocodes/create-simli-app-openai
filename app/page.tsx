@@ -1,7 +1,6 @@
 "use client";
 import React, { use, useEffect, useState } from "react";
 import SimliOpenAI from "./SimliOpenAI";
-import SimliOpenAIPushToTalk from "./SimliOpenAIPushToTalk";
 import DottedFace from "./Components/DottedFace";
 import SimliHeaderLogo from "./Components/Logo";
 import Navbar from "./Components/Navbar";
@@ -11,6 +10,7 @@ import GitHubLogo from "@/media/github-mark-white.svg";
 interface avatarSettings {
   name: string;
   openai_voice: "echo" | "alloy" | "shimmer";
+  openai_model: string;
   simli_faceid: string;
   initialPrompt: string;
 }
@@ -19,6 +19,7 @@ interface avatarSettings {
 const avatar: avatarSettings = {
   name: "Frank",
   openai_voice: "echo",
+  openai_model: "gpt-4o-mini-realtime-preview-2024-12-17",
   simli_faceid: "5514e24d-6086-46a3-ace4-6a7264e5cb7c",
   initialPrompt:
     "You are a helpful AI assistant named Frank. You are friendly and concise in your responses. Your task is to help users with any questions they might have. Your answers are short and to the point, don't give long answers be brief and straightforward.",
@@ -26,21 +27,6 @@ const avatar: avatarSettings = {
 
 const Demo: React.FC = () => {
   const [showDottedFace, setShowDottedFace] = useState(true);
-  const [interactionMode, setInteractionMode] = useState<
-    "regular" | "pushToTalk" | undefined
-  >("regular");
-
-  useEffect(() => {
-    const storedInteractionMode = localStorage.getItem("interactionMode");
-    if (storedInteractionMode) {
-      setInteractionMode(storedInteractionMode as "regular" | "pushToTalk");
-    }
-  }, []);
-
-  const saveInteractionMode = (mode: "regular" | "pushToTalk") => {
-    localStorage.setItem("interactionMode", mode);
-    setInteractionMode(mode);
-  }
 
   const onStart = () => {
     console.log("Setting setshowDottedface to false...");
@@ -55,30 +41,6 @@ const Demo: React.FC = () => {
   return (
     <div className="bg-black min-h-screen flex flex-col items-center font-abc-repro font-normal text-sm text-white p-8">
       <SimliHeaderLogo />
-      {showDottedFace && (
-        <div className="absolute bottom-[32px] right-[32px] flex gap-2">
-          <button
-            onClick={() => saveInteractionMode("regular")}
-            className={`px-4 py-2 rounded-[100px] font-abc-repro-mono focus:bg-simliblue focus:text-white focus:rounded-[100px] hover:rounded-sm hover:bg-white hover:text-black transition-all duration-300 ${
-              interactionMode === "regular"
-                ? "bg-simliblue"
-                : "bg-white bg-opacity-20"
-            }`}
-          >
-            <b>Realtime</b>
-          </button>
-          <button
-            onClick={() => saveInteractionMode("pushToTalk")}
-            className={`px-4 py-2 rounded-[100px] font-abc-repro-mono focus:bg-simliblue focus:text-white focus:rounded-[100px] hover:rounded-sm hover:bg-white hover:text-black transition-all duration-300 ${
-              interactionMode === "pushToTalk"
-                ? "bg-simliblue"
-                : "bg-white bg-opacity-20"
-            }`}
-          >
-            <b>Push to Talk</b>
-          </button>
-        </div>
-      )}
       <Navbar />
       <div className="absolute top-[32px] right-[32px]">
         <text
@@ -94,25 +56,15 @@ const Demo: React.FC = () => {
       <div className="flex flex-col items-center gap-6 bg-effect15White p-6 pb-[40px] rounded-xl w-full">
         <div>
           {showDottedFace && <DottedFace />}
-          {interactionMode === "regular" ? (
-            <SimliOpenAI
-              openai_voice={avatar.openai_voice}
-              simli_faceid={avatar.simli_faceid}
-              initialPrompt={avatar.initialPrompt}
-              onStart={onStart}
-              onClose={onClose}
-              showDottedFace={showDottedFace}
-            />
-          ) : (
-            <SimliOpenAIPushToTalk
-              openai_voice={avatar.openai_voice}
-              simli_faceid={avatar.simli_faceid}
-              initialPrompt={avatar.initialPrompt}
-              onStart={onStart}
-              onClose={onClose}
-              showDottedFace={showDottedFace}
-            />
-          )}
+          <SimliOpenAI
+            openai_voice={avatar.openai_voice}
+            openai_model={avatar.openai_model}
+            simli_faceid={avatar.simli_faceid}
+            initialPrompt={avatar.initialPrompt}
+            onStart={onStart}
+            onClose={onClose}
+            showDottedFace={showDottedFace}
+          />
         </div>
       </div>
 

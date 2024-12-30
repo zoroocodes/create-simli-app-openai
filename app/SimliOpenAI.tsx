@@ -10,6 +10,7 @@ import { on } from "events";
 interface SimliOpenAIProps {
   simli_faceid: string;
   openai_voice: "echo" | "alloy" | "shimmer";
+  openai_model: string;
   initialPrompt: string;
   onStart: () => void;
   onClose: () => void;
@@ -21,6 +22,7 @@ const simliClient = new SimliClient();
 const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
   simli_faceid,
   openai_voice,
+  openai_model,
   initialPrompt,
   onStart,
   onClose,
@@ -55,8 +57,8 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
         apiKey: process.env.NEXT_PUBLIC_SIMLI_API_KEY,
         faceID: simli_faceid,
         handleSilence: true,
-        maxSessionLength: 60, // in seconds
-        maxIdleTime: 60, // in seconds
+        maxSessionLength: 6000, // in seconds
+        maxIdleTime: 6000, // in seconds
         videoRef: videoRef,
         audioRef: audioRef,
       };
@@ -80,6 +82,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
       await openAIClientRef.current.updateSession({
         instructions: initialPrompt,
         voice: openai_voice,
+        model: openai_model,
         turn_detection: { type: "server_vad" },
         input_audio_transcription: { model: "whisper-1" },
       });
@@ -101,8 +104,10 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
       );
       // openAIClientRef.current.on('response.canceled', handleResponseCanceled);
 
+      
       await openAIClientRef.current.connect().then(() => {
         console.log("OpenAI Client connected successfully");
+        openAIClientRef.current?.createResponse();
         startRecording();
       });
 
