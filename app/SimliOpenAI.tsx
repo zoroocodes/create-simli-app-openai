@@ -9,7 +9,7 @@ import { on } from "events";
 
 interface SimliOpenAIProps {
   simli_faceid: string;
-  openai_voice: "echo" | "alloy" | "shimmer";
+  openai_voice: "alloy"|"ash"|"ballad"|"coral"|"echo"|"sage"|"shimmer"|"verse";
   openai_model: string;
   initialPrompt: string;
   onStart: () => void;
@@ -75,6 +75,7 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
     try {
       console.log("Initializing OpenAI client...");
       openAIClientRef.current = new RealtimeClient({
+        model: openai_model,
         apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
         dangerouslyAllowAPIKeyInBrowser: true,
       });
@@ -82,7 +83,6 @@ const SimliOpenAI: React.FC<SimliOpenAIProps> = ({
       await openAIClientRef.current.updateSession({
         instructions: initialPrompt,
         voice: openai_voice,
-        model: openai_model,
         turn_detection: { type: "server_vad" },
         input_audio_transcription: { model: "whisper-1" },
       });
