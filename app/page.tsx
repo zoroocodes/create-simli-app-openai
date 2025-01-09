@@ -19,7 +19,7 @@ interface avatarSettings {
 const avatar: avatarSettings = {
   name: "Anna",
   openai_voice: "echo",
-  openai_model: "gpt-4o-realtime-preview-2024-12-17", // Use "gpt-4o-mini-realtime-preview-2024-12-17" for cheaper and faster responses
+  openai_model: "gpt-4o-mini-realtime-preview-2024-12-17", // Use "gpt-4o-mini-realtime-preview-2024-12-17" for cheaper and faster responses
   simli_faceid: "defc9afa-a884-4774-bf64-539d8655b2a4",
   initialPrompt:
     "You are a helpful AI assistant named Frank. You are friendly and concise in your responses. Your task is to help users with any questions they might have. Your answers are short and to the point, don't give long answers be brief and straightforward.",
